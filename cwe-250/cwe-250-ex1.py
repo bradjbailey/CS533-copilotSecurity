@@ -1,7 +1,7 @@
 def makeNewUserDir(username):
     if invalidUsername(username):
         print('Usernames cannot contain invalid characters')
-    return False
+        return False
 
     #  temporarily raise the program's privileges to allow creation of a new user folder
     try:

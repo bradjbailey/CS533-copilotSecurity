@@ -32,24 +32,6 @@ Suggestion 4
     return baseUrl + "?receipt=" + RandomString(20);
 }
 
-=======
-Suggestion 5
-
-        // The URL contains a receipt ID that maps to a receipt stored on the server.
-
-=======
-Suggestion 6
-
-        // The URL is passed to the app via the purchase token.
-    // The app uses the URL to retrieve the receipt when it is needed.
-    // The URL can be used only once.
-    // For example:
-    //   http://www.example.com/receipt?token=1234&timestamp=5678&signature=abcd
-    //   token: purchase token
-    //   timestamp: time that the URL was created
-    //   signature: HMAC of token and timestamp
-}
-```
 
 =======
 Suggestion 7

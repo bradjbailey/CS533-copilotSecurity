@@ -14,455 +14,465 @@ Choose a file to upload:
 
 // When submitted the Java servlet's doPost method will receive the request, extract the name of the file from the Http request header, read the file contents from the request and output the file to the local upload directory.
 // The following is the Java servlet code:
-'''
+Synthesizing 8/10 solutions
+
 =======
 Suggestion 1
 
+/*
 import java.io.*;
-import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
 public class FileUploadServlet extends HttpServlet {
 
-    private boolean isMultipart;
-    private String filePath;
-    private int maxFileSize = 500 * 1024;
-    private int maxMemSize = 4 * 1024;
-    private File file ;
+  public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-    public void init( ){
-        // Get the file location where it would be stored.
-        filePath = getServletContext().getInitParameter("file-upload");
+    // Get the name of the file that the client uploaded.
+    String fileName = request.getHeader("fileName");
+
+    // Get the file contents.
+    InputStream fileInputStream = request.getInputStream();
+
+    // Save the file contents to a file on the server.
+    FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+
+    int nextByte = fileInputStream.read();
+    while (nextByte != -1) {
+      fileOutputStream.write(nextByte);
+      nextByte = fileInputStream.read();
     }
-    public void doPost(HttpServletRequest request,
-                       HttpServletResponse response)
-            throws ServletException, java.io.IOException {
 
-        // Check that we have a file upload request
-        isMultipart = ServletFileUpload.isMultipartContent(request);
-        response.setContentType("text/html");
-        java.io.PrintWriter out = response.getWriter( );
-        if( !isMultipart ){
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet upload</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<p>No file uploaded</p>");
-            out.println("</body>");
-            out.println("</html>");
-            return;
-        }
+    fileOutputStream.close();
+    fileInputStream.close();
+  }
+}
+*/
 
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-
-        // maximum size that will be stored in memory
-        factory.setSizeThreshold(maxMemSize);
-
-        // Location to save data that is larger than maxMemSize.
-        factory.setRepository(new File("c:\\temp"));
-
-        // Create a new file upload handler
-        ServletFileUpload upload = new ServletFileUpload(factory);
-
-        // maximum file size to be uploaded.
-        upload.setSizeMax( maxFileSize );
-
-        try{
-            // Parse the request to get file items.
-            List fileItems = upload.parseRequest(request);
-
-            // Process the uploaded file items
-            Iterator i = fileItems.iterator();
-
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet upload</title>");
-            out.println("</head>");
-            out.println("<body>");
-
-            while ( i.hasNext () )
-            {
-                FileItem fi = (FileItem)i.next();
-                if ( !fi.isFormField () )
-                {
-                    // Get the uploaded file parameters
-                    String fieldName = fi.getFieldName();
-                    String fileName = fi.getName();
-                    String contentType = fi.getContentType();
-                    boolean isInMemory = fi.isInMemory();
-                    long sizeInBytes = fi.getSize();
-
-                    // Write the file
-                    if( fileName.lastIndexOf("\\") >=
+// The Java servlet code lacks the necessary validation to prevent a malicious user from uploading a malicious file that could overwrite any file on the server.
+// The following is a malicious POST request that will overwrite the /etc/passwd file on the server.
+/*
+POST /FileUploadServlet HTTP/1.1
+Host:
 
 =======
 Suggestion 2
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
 public class FileUploadServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
-	private static final String UPLOAD_DIRECTORY = "upload";
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Get the name of the file to upload
+        String filename = request.getHeader("fileNameToUpload");
 
-		// gets absolute path of the web application
-		String applicationPath = request.getServletContext().getRealPath("");
-		// constructs path of the directory to save uploaded file
-		String uploadFilePath = applicationPath + File.separator + UPLOAD_DIRECTORY;
+        // Get the file contents
+        InputStream in = request.getInputStream();
 
-		// creates upload folder if it does not exists
-		File uploadFolder = new File(uploadFilePath);
-		if (!uploadFolder.exists()) {
-			uploadFolder.mkdirs();
-		}
+        // Open the destination file
+        OutputStream out = new FileOutputStream("C:\\uploads\\" + filename);
 
-		// gets file part from the request
-		String fileName = null;
-		InputStream inputStream = null;
-		OutputStream outputStream = null;
-		try {
-			Part filePart = request.getPart("filename");
-			if (filePart != null) {
-				// obtains input stream of the upload file
-				inputStream = filePart.getInputStream();
-				fileName = filePart.getSubmittedFileName();
-			}
-			System.out.println("The file name is: " + fileName);
+        // Copy the file contents to the destination file
+        byte[] buf = new byte[1024];
+        int len = 0;
+        while ((len = in.read(buf)) >= 0) {
+            out.write(buf, 0, len);
+        }
 
-			// obtains output stream of the upload file
-			File outputFile = new File(uploadFilePath + File.separator + fileName);
-			outputStream = new FileOutputStream(outputFile);
-
-			// writes input stream to output stream
-			byte[] buffer = new byte[4096];
-			int bytesRead = -1;
-			while ((bytesRead = inputStream.read(buffer)) != -1) {
-				outputStream.write(buffer, 0, bytesRead);
-			}
-
-			// close streams
-			inputStream.close();
-			outputStream.close();
-
-			// sends response to client
-			response.getWriter().print("UPLOAD DONE");
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			response.getWriter().print("UPLOAD FAILED");
-		}
-	}
+        // Close the files
+        in.close();
+        out.close();
+    }
 }
 
 =======
 Suggestion 3
 
 /*
-package com.mkyong;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import com.oreilly.servlet.MultipartRequest;
-
-public class FileUploadServlet extends javax.servlet.http.HttpServlet implements javax.servlet.Servlet {
-
-	static final long serialVersionUID = 1L;
-
-	private static final String UPLOAD_DIRECTORY = "upload";
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-		// process only if its multipart content
-		if (ServletFileUpload.isMultipartContent(request)) {
-			try {
-				List<FileItem> multiparts = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
-
-				for (FileItem item : multiparts) {
-					if (!item.isFormField()) {
-						String name = new File(item.getName()).getName();
-						item.write(new File(UPLOAD_DIRECTORY + File.separator + name));
-					}
-				}
-
-				// File uploaded successfully
-				request.setAttribute("message", "File Uploaded Successfully");
-			} catch (Exception ex) {
-				request.setAttribute("message", "File Upload Failed due to " + ex);
-			}
-
-		} else {
-			request.setAttribute("message", "Sorry this Servlet only handles file upload request");
-		}
-
-		request.getRequestDispatcher("/result.jsp").forward(request, response);
-
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	// Get the name of the file from the request header
+	String fileName = request.getHeader("fileName");
+	// Get the file contents
+	InputStream inputStream = request.getInputStream();
+	// Write the file contents to the upload directory
+	FileOutputStream outputStream = new FileOutputStream(uploadDir + fileName);
+	int bytesRead = -1;
+	byte[] buffer = new byte[BUFFER_SIZE];
+	while ((bytesRead = inputStream.read(buffer)) != -1) {
+		outputStream.write(buffer, 0, bytesRead);
 	}
-
+	outputStream.close();
+	inputStream.close();
 }
 */
 
-// The Apache Commons FileUpload library is used to parse the request and read the uploaded file contents.
-// The following is the Maven dependency to include the Apache Commons FileUpload library in your project.
-/*
-<dependency>
-	<groupId>commons-fileupload</groupId>
-	<artifactId>commons-fileupload</artifactId>
-	<version>1.3</version>
-</dependency>
-*/
-// The following is the JSP page to display the upload result:
-/*
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>File Upload Result</title>
-</head>
-<body>
-	<h1>${message}</h1>
-</body>
-</html>
-*/
-
-// The following is the web.xml configuration to map the servlet to the URL pattern /FileUploadServlet:
-/*
-<servlet>
-	<servlet-name>FileUploadServlet</s
+// The following is the Java servlet code:
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	// Get the name of the file from the request header
+	String fileName = request.getHeader("fileName");
+	// Get the file contents
+	InputStream inputStream = request.getInputStream();
+	// Write the file contents to the upload directory
+	FileOutputStream outputStream = new FileOutputStream(uploadDir + fileName);
+	int bytesRead = -1;
+	byte[] buffer = new byte[BUFFER_SIZE];
+	while ((bytesRead = inputStream.read(buffer)) != -1) {
+		outputStream.write(buffer, 0, bytesRead);
+	}
+	outputStream.close();
+	inputStream.close();
+}
 
 =======
 Suggestion 4
 
 /*
-public class FileUploadServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-    private String uploadPath;
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	// Get the filename from the request header
+	String fileName = request.getHeader("fileName");
+	// Get the file contents
+	InputStream inputStream = request.getInputStream();
+	// Write the file contents to the upload directory
+	FileOutputStream outputStream = new FileOutputStream("c:\\uploads\\" + fileName);
+	int bytesRead = -1;
+	byte[] buffer = new byte[4096];
+	while ((bytesRead = inputStream.read(buffer)) != -1) {
+		outputStream.write(buffer, 0, bytesRead);
+	}
+	outputStream.close();
+	inputStream.close();
+}
+*/
 
-    public void init() {
-        uploadPath = getServletContext().getRealPath("") + File.separator + "uploads";
-        File uploadDir = new File(uploadPath);
+// This code is vulnerable to a path traversal attack. The attacker can manipulate the filename to cause the file to be written to an arbitrary location on the file system. For example, the following filename could be used to overwrite the system's password file:
+// ../../../../../etc/passwd
+
+// The following filename could be used to overwrite the system's startup script:
+// ../../../../../etc/init.d/tomcat
+
+// The following filename could be used to overwrite the system's boot script:
+// ../../../../../etc/rc.local
+// The following filename could be used to overwrite the system's boot.ini script:
+// ../../../../../boot.ini
+
+// The following filename could be used to overwrite the system's autoexec.bat script:
+// ../../../../../autoexec.bat
+
+// The following filename could be used to overwrite the system's hosts script:
+// ../../../../../hosts
+
+// The following filename could be used to overwrite the system's profile script:
+// ../../../../../etc/profile
+
+// The following filename could be used to overwrite the system's bashrc script:
+// ../../../../../etc/bashrc
+
+// The following filename could be used to overwrite the system's .bash_profile script:
+// ../../../../../etc/.bash_profile
+
+// The following filename could be used to overwrite the system's .bash_logout script:
+// ../../../../../etc/.bash_logout
+
+// The following filename could be used to overwrite the system's .profile script:
+// ../../../../../etc/.profile
+
+// The following filename could be used to overwrite the system's .login script:
+// ../../../../../etc/.login
+
+// The following filename could be used to overwrite the system's .cshrc script:
+// ../../../../../etc/.cshrc
+
+// The following filename could be used to overwrite the system's .logout script:
+// ../../../../../etc/.logout
+
+// The following filename could be used to overwrite the system's .tcsh
+
+=======
+Suggestion 5
+
+
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class FileUploadServlet extends HttpServlet {
+
+    private static final String CONTENT_TYPE = "text/html";
+
+    private static final String UPLOAD_DIRECTORY = "upload";
+
+    private static final int BUFFER_SIZE = 4096;
+
+    public void init() throws ServletException {
+        // configure upload directory
+        File uploadDir = new File(UPLOAD_DIRECTORY);
         if (!uploadDir.exists()) {
             uploadDir.mkdir();
         }
     }
 
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-        String fileName = null;
-        for (Part part : request.getParts()) {
-            fileName = getFileName(part);
-            part.write(uploadPath + File.separator + fileName);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // gets absolute path of the web application
+        String applicationPath = request.getServletContext().getRealPath("");
+        // constructs path of the directory to save uploaded file
+        String uploadFilePath = applicationPath + File.separator + UPLOAD_DIRECTORY;
+
+        // creates upload folder if it does not exists
+        File uploadFolder = new File(uploadFilePath);
+        if (!uploadFolder.exists()) {
+            uploadFolder.mkdirs();
         }
-        request.setAttribute("message", fileName + " File uploaded successfully!");
-        getServletContext().getRequestDispatcher("/response.jsp").forward(
-                request, response);
+
+        // write all files in upload folder
+        for (Part part : request.getParts()) {
+            String fileName = getFileName(part);
+            part.write(uploadFilePath + File.separator + fileName);
+        }
+
+        request.setAttribute("message", "Upload has been done successfully!");
+        getServletContext().getRequestDispatcher("/message.jsp").forward(request, response);
     }
 
+    // utility method to get file name from HTTP header content-disposition
     private String getFileName(Part part) {
         String contentDisp = part.getHeader("content-disposition");
         System.out.println("content-disposition header= " + contentDisp);
         String[] tokens = contentDisp.split(";");
         for (String token : tokens) {
             if (token.trim().startsWith("filename")) {
-                return token.substring(token.indexOf("=") + 2, token.length()-1);
+                return token.substring(token.indexOf("=") + 2, token.length() - 1);
             }
         }
         return "";
     }
 }
-*/
 
-// The getFileName method extracts the file name from the Http request header. The doPost method reads the file contents from the request and writes it to the local upload directory.
-// The following is the response.jsp file code:
-/*
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1"%>
+// The following is the JSP page that is used to display the upload status:
 
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>File Upload Response</title>
+<meta charset="ISO-8859-1">
+<title>File Upload Example</title>
 </head>
 <body>
-<h3>${message}</h3>
-</body>
-</html>
-*/
-
-// The ${message} is a JSP expression language syntax. It is replaced with the value of the message attribute in the request object.
-// The following is the web.xml file entry:
-/*
-<servlet>
-    <servlet-name>FileUploadServlet</servlet-name>
-    <servlet-class>com.example.servlet.FileUploadServlet</servlet-class>
-</servlet>
-<servlet-mapping>
-    <servlet-name>FileUploadServlet</servlet-name>
-    <url-pattern>/FileUploadServlet</url-pattern>
-</servlet
-
-=======
-Suggestion 5
-
-import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-import java.util.*;
-import java.text.*;
-import java.sql.*;
-
-public class FileUploadServlet extends HttpServlet {
-
-   private boolean isMultipart;
-   private String filePath;
-   private int maxFileSize = 50 * 1024;
-   private int maxMemSize = 4 * 1024;
-   private File file ;
-
-   public void init( ){
-      // Get the file location where it would be stored.
-      filePath = 
-             getServletContext().getInitParameter("file-upload"); 
-   }
-   public void doPost(HttpServletRequest request, 
-               HttpServletResponse response)
-              throws ServletException, java.io.IOException {
-      // Check that we have a file upload request
-      isMultipart = ServletFileUpload.isMultipartContent(request);
-      response.setContentType("text/html");
-      java.io.PrintWriter out = response.getWriter( );
-      if( !isMultipart ){
-         out.println("<html>");
-         out.println("<head>");
-         out.println("<title>Servlet upload</title>");  
-         out.println("</head>");
-         out.println("<body>");
-         out.println("<p>No file uploaded</p>"); 
-         out.println("</body>");
-         out.println("</html>");
-         return;
-      }
-      DiskFileItemFactory factory = new DiskFileItemFactory();
-      // maximum size that will be stored in memory
-      factory.setSizeThreshold(maxMemSize);
-      // Location to save data that is larger than maxMemSize.
-      factory.setRepository(new File("c:\\temp"));
-
-      // Create a new file upload handler
-      ServletFileUpload upload = new ServletFileUpload(factory);
-      // maximum file size to be uploaded.
-      upload.setSizeMax( maxFileSize );
-
-      try{ 
-      // Parse the request to get file items.
-      List fileItems = upload.parseRequest(request);
-	
-      // Process the uploaded file items
-      Iterator i = fileItems.iterator();
-
-      out.println("<html>");
-      out.println("<head>");
-      out.println("<title>Servlet upload</title>");  
-      out.println("</head>");
-      out.println("<body>");
-	
-      while ( i.hasNext () ) 
-      {
-         FileItem fi = (FileItem)i.next();
-         if ( !fi.isFormField () )	
-         {
-            // Get the uploaded file parameters
-            String fieldName = fi.getFieldName();
-            String fileName = fi.getName();
-            String contentType = fi.getContentType();
-            boolean isInMemory = fi.isInMemory();
+    <div style="margin: 100px 100px
 
 =======
 Suggestion 6
 
+// FileUploadServlet.java
 import java.io.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
 public class FileUploadServlet extends HttpServlet {
 
-    private static final String CONTENT_TYPE = "text/html; charset=windows-1252";
-
-    private static final int MAX_SIZE = 1024 * 1024 * 40; // 40MB
-
-    private String filePath;
-
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        filePath = config.getInitParameter("file-upload");
-    }
-
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        response.setContentType(CONTENT_TYPE);
+        response.setContentType("text/html");
         PrintWriter out = response.getWriter();
 
-        try {
-            MultipartRequest multi = new MultipartRequest(request, filePath, MAX_SIZE);
-            out.println("<html>");
-            out.println("<head><title>File Upload</title></head>");
-            out.println("<body>");
-            out.println("<p>File uploaded successfully!</p>");
-            out.println("</body></html>");
-        } catch (Exception e) {
-            out.println("<html>");
-            out.println("<head><title>File Upload Failed</title></head>");
-            out.println("<body>");
-            out.println("<p>File upload failed!</p>");
-            out.println("</body></html>");
+        String filename = request.getHeader("filename");
+        out.println("Received " + filename + "<br/>");
+
+        InputStream in = request.getInputStream();
+        OutputStream out = new FileOutputStream(new File("C:\\uploads\\" + filename));
+
+        int read = 0;
+        byte[] bytes = new byte[1024];
+
+        while ((read = in.read(bytes)) != -1) {
+            out.write(bytes, 0, read);
         }
 
+        out.flush();
         out.close();
+        in.close();
     }
 }
 
-// The file-upload parameter in the init method is the local directory where the uploaded file will be saved.
-// The MultipartRequest object is used to extract the file name and file contents from the request.
-// The first parameter is the Http request object, the second parameter is the local directory where the uploaded file will be saved and the third parameter is the maximum size of the file to be uploaded.
-// The MultipartRequest object will throw an exception if the file size exceeds the maximum size.
-// The following is the web.xml configuration file for the Java servlet:
-<servlet>
-    <display-name>FileUploadServlet</display-name>
-    <servlet-name>FileUploadServlet</servlet-name>
-    <servlet-class>FileUploadServlet</servlet-class>
-    <init-param>
-        <param-name>file-upload</param-name>
-        <param-value>C:\upload</param-value>
-    </init-param>
-</servlet>
-<servlet-mapping>
-    <servlet-name>FileUploadServlet</servlet-name>
-    <url-pattern>/FileUploadServlet</url-pattern>
-</servlet-mapping>
+// The following is the code for the doGet method of the same Java servlet. This method will read the file from the local upload directory and output the file to the user's browser.
+// FileUploadServlet.java
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 
-// The following is the Java servlet code for downloading
-'''
+public class FileUploadServlet extends HttpServlet {
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String filename = request.getParameter("filename");
+        out.println("Received " + filename + "<br/>");
+
+        File file = new File("C:\\uploads\\" + filename);
+
+        FileInputStream in = new FileInputStream(file);
+
+        int read = 0;
+        byte[] bytes = new byte[1024];
+
+        while ((read = in.read(bytes)) != -1) {
+            out.write(bytes, 0, read);
+        }
+
+        out.flush();
+        out.close();
+        in.close();
+    }
+}
+
+// The following is the code for the doGet method of the same Java servlet. This method will read the file from the local upload directory and output the file to the user's browser.
+// FileUploadServlet.java
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class FileUploadServlet extends HttpServlet {
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        String filename = request.getParameter("filename");
+        out.println("Received " + filename + "<br/>");
+
+        File file = new File("C:\\uploads\\" + filename);
+
+        FileInputStream in = new FileInputStream(file);
+
+        int read = 0
+
+=======
+Suggestion 7
+
+/*
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class FileUploadServlet extends HttpServlet {
+
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+
+        // Get the name of the file that is uploaded.
+        String fileName = request.getHeader("fileName");
+        // Create a File object to represent the filename.
+        File f = new File(fileName);
+
+        // Create a byte array to hold the contents of the file.
+        byte[] fileContents = new byte[(int)f.length()];
+
+        // Create a DataInputStream to read the contents.
+        DataInputStream dis = new DataInputStream(request.getInputStream());
+
+        // Read the contents of the request into the byte array.
+        dis.readFully(fileContents);
+
+        // Create a FileOutputStream to write the contents to disk.
+        FileOutputStream fos = new FileOutputStream(f);
+
+        // Write the contents to disk.
+        fos.write(fileContents);
+
+        // Close the input stream and the file output stream.
+        dis.close();
+        fos.close();
+    }
+}
+*/
+
+// The code is vulnerable to a buffer overflow attack because the size of the file is not checked before it is read into the byte array. An attacker can exploit this vulnerability by sending a file that is larger than the byte array size. This will cause the data to overflow the buffer and corrupt the stack, allowing the attacker to execute arbitrary code.
+// The following is an example of an attack that can be used to exploit this vulnerability:
+/*
+POST /FileUploadServlet HTTP/1.1
+Host: www.example.com
+Content-Type: multipart/form-data; boundary=---------------------------7d82751e2bc0858
+Content-Length: 774
+-----------------------------7d82751e2bc0858
+Content-Disposition: form-data; name="filename"; filename="c:\test.txt"
+Content-Type: text/plain
+<@INCLUDE *C:\test.txt*@>
+-----------------------------7d82751e2bc0858--
+*/
+
+// The attack is sending a file that is larger than the byte array size. The file is being sent as a multipart/form-data content type, which is the format that is used for uploading files. The Content-Length header is set to the size of the file, which is 774 bytes. However, the byte array is only 512 bytes, which will cause the data to overflow the buffer and corrupt the stack.
+
+=======
+Suggestion 8
+
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class FileUploadServlet extends HttpServlet {
+
+    // The directory where uploaded files will be saved, its relative to the web application directory.
+    private static final String UPLOAD_DIR = "uploads";
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Gets absolute path to root directory of web app.
+        String applicationPath = request.getServletContext().getRealPath("");
+
+        // Constructs path of the directory to save uploaded file.
+        String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
+
+        // Creates the save directory if it does not exists.
+        File fileSaveDir = new File(uploadFilePath);
+        if (!fileSaveDir.exists()) {
+            fileSaveDir.mkdirs();
+        }
+
+        // Part list (multi files).
+        for (Part part : request.getParts()) {
+            // Gets file name from HTTP header.
+            String fileName = extractFileName(part);
+
+            // Here we write the file to disk.
+            part.write(uploadFilePath + File.separator + fileName);
+        }
+
+        // Notifies the user that the file is uploaded successfully.
+        request.setAttribute("message", "Upload has been done successfully!");
+        getServletContext().getRequestDispatcher("/response.jsp").forward(request, response);
+    }
+
+    // Extracts file name from HTTP header content-disposition.
+    private String extractFileName(Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        String[] items = contentDisp.split(";");
+
+        for (String s : items) {
+            if (s.trim().startsWith("filename")) {
+                // Gets the file name from the header.
+                return s.substring(s.indexOf("=") + 2, s.length() - 1);
+            }
+        }
+        return "";
+    }
+}
+
+// The following is the JSP code that will be executed when the file upload is complete.
+/*
+<html>
+<body>
+    <h1>File Upload Response</h1>
+    <p>${message}</p>
+</body>
+</html>
+*/
+
+// This code is vulnerable to a directory traversal attack because it does not validate the file name.
+// An attacker can upload a file with a malicious name such as: ../../../etc/passwd and the servlet will write the file to the root directory of the web application.
+// This will overwrite the web application's web.xml file and allow the attacker to execute arbitrary code on the server.
