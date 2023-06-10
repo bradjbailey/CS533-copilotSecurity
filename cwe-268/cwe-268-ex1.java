@@ -11,7 +11,7 @@ public void resetPassword(User requestingUser, User user, String password ){
 =======
 Suggestion 1
 
-                        case ADMIN:
+            case ADMIN:
                 user.setPassword(password);
                 break;
             case OPERATOR:
